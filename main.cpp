@@ -19,6 +19,15 @@ struct TargetData {
     vector<double> data_waktu_tempuh; // Vektor untuk menyimpan data waktu tempuh
 };
 
+struct kendaraan {
+    int id;
+    int kapasitas;
+};
+
+struct Murid {
+    int id;
+};
+
 class DataJarak {
 public:
     vector<TargetData> Data;
@@ -79,7 +88,35 @@ public:
         }
     }
 };
+// Fungsi menambah kendaraan
+vector<kendaraan> inputKendaraan(){
+    vector<kendaraan> vehicles;
+    int jumlahKendaraan;
+    cout << "Masukkan jumlah kendaraan: ";
+    cin >> jumlahKendaraan;
+    for(int i= 0; i < jumlahKendaraan; ++i){
+        kendaraan v;
+        cout << "kendaraan " << i + 1 << " - Masukkan kapasitas: ";
+        cin >> v.kapasitas;
+        v.id = i + 1;
+        vehicles.push_back(v);
+    }
+    return vehicles;
+}
 
+// Fungsi menambah murid
+vector<Murid> inputMurid(){
+    vector<Murid> students;
+    int jumlahMurid;
+    cout << "Masukkan jumlah Murid: ";
+    cin >> jumlahMurid;
+    for(int i = 0; i < jumlahMurid; i++){
+        Murid m;
+        m.id = i + 1;
+        students.push_back(m);
+    }
+    return students;
+}
 // Fungsi untuk membaca data dari file CSV.
 vector<TargetData> readDataFromCSV(const string& filePath) {
     vector<TargetData> data;
@@ -139,5 +176,10 @@ int main() {
     cout<< "DATA WAKTU TEMPUH: " << endl;
     dataJarak.PrintDataWaktuTempuh();
     
+
+    cout<< "INPUT KENDARAAN DAN MURID: "<< endl;
+    vector<kendaraan> vehicles = inputKendaraan();
+    vector<Murid> students = inputMurid();
+
     return 0;
 }
