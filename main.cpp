@@ -104,25 +104,27 @@ vector<TargetData> readDataFromCSV(const string& filePath) {
     return data;
 }
 
+// Function to print initial data
+void printInitialData(const vector<TargetData>& targets) {
+    cout << "DATA AWAL" << endl;
+    int number = 0;
+    for (const auto& target : targets) {
+        cout << "No " << number
+             << ", X: " << target.x
+             << ", Y: " << target.y
+             << ", Permintaan: " << target.permintaan
+             << ", Waktu Buka: " << target.waktu_buka
+             << ", Waktu Tutup: " << target.waktu_tutup << endl;
+        number++;
+    }
+}
+
 int main() {
     string csv_file = "sample.csv"; // Pastikan file ini ada di direktori yang sama dengan executable atau berikan path lengkap.
     vector<TargetData> targets = readDataFromCSV(csv_file);
 
-
-    cout<< "DATA AWAL"<< endl;
-    int number = 0;
-    // Tampilkan data untuk verifikasi
-    for (const auto& target : targets) {
-        cout << "No " << number
-                  << ", X: " << target.x
-                  << ", Y: " << target.y
-                  << ", Permintaan: " << target.permintaan
-                  << ", Waktu Buka: " << target.waktu_buka
-                  << ", Waktu Tutup: " << target.waktu_tutup << endl;
-                  number++;
-    }
-
-    cout<< "============================================================="<< endl;
+    // Call the function to print initial data
+    printInitialData(targets);
 
     DataJarak dataJarak;
     dataJarak.Data = targets; // Memasukkan data target ke dalam class DataJarak
