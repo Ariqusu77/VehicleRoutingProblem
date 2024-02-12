@@ -104,6 +104,8 @@ vector<TargetData> readDataFromCSV(const string& filePath) {
     return data;
 }
 
+
+
 // Function to print initial data
 void printInitialData(const vector<TargetData>& targets) {
     cout << "DATA AWAL" << endl;
