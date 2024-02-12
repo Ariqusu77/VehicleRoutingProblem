@@ -139,5 +139,6 @@ int main() {
     cout<< "DATA WAKTU TEMPUH: " << endl;
     dataJarak.PrintDataWaktuTempuh();
 
+    cout<< "taik";
     return 0;
 }
