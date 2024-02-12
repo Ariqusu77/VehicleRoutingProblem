@@ -138,7 +138,6 @@ int main() {
     // Tampilkan waktu tempuh antar target
     cout<< "DATA WAKTU TEMPUH: " << endl;
     dataJarak.PrintDataWaktuTempuh();
-
-    cout<< "gbg: " << endl;
+    
     return 0;
 }
