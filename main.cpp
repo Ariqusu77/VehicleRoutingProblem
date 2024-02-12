@@ -16,6 +16,7 @@ struct TargetData {
     int waktu_buka;
     int waktu_tutup;
     vector<double> data_jarak; // Vektor untuk menyimpan jarak ke target lain
+    vector<double> data_waktu_tempuh; // Vektor untuk menyimpan data waktu tempuh
 };
 
 class DataJarak {
@@ -39,6 +40,21 @@ public:
         }
     }
 
+    void AssignDataWaktuTempuh() {
+        // Pastikan setiap target memiliki vektor data_waktu_tempuh dengan ukuran yang tepat
+        for (auto& target : Data) {
+            target.data_waktu_tempuh.resize(Data.size(), 0.0);
+        }
+
+        // Hitung waktu tempuh antar target dengan rumus yang diberikan
+        for (size_t i = 0; i < Data.size(); ++i) {
+            for (size_t j = 0; j < Data[i].data_jarak.size(); ++j) {
+                // Waktu tempuh adalah jarak (dalam satuan yang sama dengan kecepatan) dikalikan 60 dan dibagi 40
+                double waktu_tempuh = Data[i].data_jarak[j] * 60.0 / 40.0;
+                Data[i].data_waktu_tempuh[j] = waktu_tempuh;
+            }
+        }
+    }
     // Fungsi untuk menampilkan data jarak antar target
     void PrintDataJarak() {
         for (size_t i = 0; i < Data.size(); ++i) {
@@ -46,6 +62,18 @@ public:
             for (size_t j = 0; j < Data[i].data_jarak.size(); ++j) {
                 cout << fixed << setprecision(3) <<Data[i].data_jarak[j];
                 if (j < Data[i].data_jarak.size() - 1) cout << ", ";
+            }
+            cout << endl;
+        }
+    }
+
+    void PrintDataWaktuTempuh() {
+        cout << "Waktu tempuh antar target (dalam menit):" << endl;
+        for (size_t i = 0; i < Data.size(); ++i) {
+            cout << "Dari Target " << i << " ke target lain: ";
+            for (size_t j = 0; j < Data[i].data_waktu_tempuh.size(); ++j) {
+                cout << fixed << setprecision(3) << Data[i].data_waktu_tempuh[j];
+                if (j < Data[i].data_waktu_tempuh.size() - 1) cout << ", ";
             }
             cout << endl;
         }
@@ -99,10 +127,15 @@ int main() {
     DataJarak dataJarak;
     dataJarak.Data = targets; // Memasukkan data target ke dalam class DataJarak
     dataJarak.AssignDataJarak(); // Menghitung jarak antar target
+    dataJarak.AssignDataWaktuTempuh(); // Menghitung waktu tempuh antar target
 
     // Tampilkan jarak antar target
     cout<< "DATA JARAK: " << endl;
     dataJarak.PrintDataJarak();
+
+    // Tampilkan waktu tempuh antar target
+    cout<< "DATA WAKTU TEMPUH: " << endl;
+    dataJarak.PrintDataWaktuTempuh();
 
     return 0;
 }
