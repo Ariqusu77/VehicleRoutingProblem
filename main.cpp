@@ -20,6 +20,15 @@ struct TargetData {
     vector<double> data_waktu_tempuh; // Vektor untuk menyimpan data waktu tempuh
 };
 
+struct kendaraan {
+    int id;
+    int kapasitas;
+};
+
+struct Murid {
+    int id;
+};
+
 class DataJarak {
 public:
     vector<TargetData> Data;
@@ -80,50 +89,35 @@ public:
         }
     }
 };
-
-class Siswa {
-public:
-    vector<double> initial;
-    int destination;
-    vector<int> routes;
-
-    Siswa(int n) : destination(n) {}
-
-    void Setup() {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
-        // Resize Temp to the size of destination
-        vector<double> Temp(destination);
-
-        for (int i = 0; i < destination; i++) {
-            double minr = 0.0;
-            double maxr = 1.0;
-            std::uniform_real_distribution<double> dis(minr, maxr);
-            double random = dis(gen);
-            Temp[i] = random;  // Store the random number in Temp
-        }
-
-        initial = Temp;
-        routes.resize(destination);
-
-        for (int i = 0; i < destination; i++) {
-            double min = Temp[i];
-
-            int num = i; // Initialize num to i
-            for (int j = 0; j < destination; j++) {
-                if (Temp[j] > min) {
-                    continue;
-                }
-                min = Temp[j];
-                num = j;
-            }
-            Temp[num] = 1.1;  // Set Temp[num] to a value not less than 1.0 to avoid being selected again
-            routes[num] = i;  // Assign the route index
-        }
+// Fungsi menambah kendaraan
+vector<kendaraan> inputKendaraan(){
+    vector<kendaraan> vehicles;
+    int jumlahKendaraan;
+    cout << "Masukkan jumlah kendaraan: ";
+    cin >> jumlahKendaraan;
+    for(int i= 0; i < jumlahKendaraan; ++i){
+        kendaraan v;
+        cout << "kendaraan " << i + 1 << " - Masukkan kapasitas: ";
+        cin >> v.kapasitas;
+        v.id = i + 1;
+        vehicles.push_back(v);
     }
-};
+    return vehicles;
+}
 
+// Fungsi menambah murid
+vector<Murid> inputMurid(){
+    vector<Murid> students;
+    int jumlahMurid;
+    cout << "Masukkan jumlah Murid: ";
+    cin >> jumlahMurid;
+    for(int i = 0; i < jumlahMurid; i++){
+        Murid m;
+        m.id = i + 1;
+        students.push_back(m);
+    }
+    return students;
+}
 // Fungsi untuk membaca data dari file CSV.
 vector<TargetData> readDataFromCSV(const string& filePath) {
     vector<TargetData> data;
@@ -163,39 +157,30 @@ void printInitialData(const vector<TargetData>& targets) {
     }
 }
 
-// int main() {
-//     string csv_file = "sample.csv"; // Pastikan file ini ada di direktori yang sama dengan executable atau berikan path lengkap.
-//     vector<TargetData> targets = readDataFromCSV(csv_file);
+int main() {
+    string csv_file = "sample.csv"; // Pastikan file ini ada di direktori yang sama dengan executable atau berikan path lengkap.
+    vector<TargetData> targets = readDataFromCSV(csv_file);
 
-//     // Call the function to print initial data
-//     printInitialData(targets);
+    // Call the function to print initial data
+    printInitialData(targets);
 
-//     DataJarak dataJarak;
-//     dataJarak.Data = targets; // Memasukkan data target ke dalam class DataJarak
-//     dataJarak.AssignDataJarak(); // Menghitung jarak antar target
-//     dataJarak.AssignDataWaktuTempuh(); // Menghitung waktu tempuh antar target
+    DataJarak dataJarak;
+    dataJarak.Data = targets; // Memasukkan data target ke dalam class DataJarak
+    dataJarak.AssignDataJarak(); // Menghitung jarak antar target
+    dataJarak.AssignDataWaktuTempuh(); // Menghitung waktu tempuh antar target
 
-//     // Tampilkan jarak antar target
-//     cout<< "DATA JARAK: " << endl;
-//     dataJarak.PrintDataJarak();
+    // Tampilkan jarak antar target
+    cout<< "DATA JARAK: " << endl;
+    dataJarak.PrintDataJarak();
 
-//     // Tampilkan waktu tempuh antar target
-//     cout<< "DATA WAKTU TEMPUH: " << endl;
-//     dataJarak.PrintDataWaktuTempuh();
+    // Tampilkan waktu tempuh antar target
+    cout<< "DATA WAKTU TEMPUH: " << endl;
+    dataJarak.PrintDataWaktuTempuh();
+    
 
-//     cout<< "taik";
-//     return 0;
-// }
+    cout<< "INPUT KENDARAAN DAN MURID: "<< endl;
+    vector<kendaraan> vehicles = inputKendaraan();
+    vector<Murid> students = inputMurid();
 
-int main(){
-    Siswa siswa(10);
-    siswa.Setup();
-
-    for(int i = 0; i < siswa.destination; i++){
-    cout << siswa.initial[i] << endl;
-    }
-
-    for(int i = 0; i < siswa.destination; i++){
-        cout << siswa.routes[i] << endl;
-    }
+    return 0;
 }
