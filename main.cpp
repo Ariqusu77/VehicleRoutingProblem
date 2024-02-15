@@ -20,10 +20,29 @@ struct TargetData {
     vector<double> data_waktu_tempuh; // Vektor untuk menyimpan data waktu tempuh
 };
 
-struct Kendaraan {
+class Kendaraan {
+public:
     int id;
     int kapasitas;
+    int max;
     int waktu;
+    vector<int> routing;
+
+    Kendaraan(){
+        waktu = 0;
+        kapasitas = 0;
+        routing.push_back(0);
+    }
+
+    Kendaraan(int Id, int kapasitas) : id(Id), max(kapasitas) {
+        waktu = 0;
+        kapasitas = 0;
+        routing.push_back(0);
+    }
+
+    void Update(){
+
+    }
 };
 
 class DataJarak {
@@ -98,13 +117,16 @@ class Siswa {
 public:
     int id; 
     int destination;
+    int kapasitas;
+    int point;
+    int status;
     vector<double> initial;
     vector<int> routes;
-    vector<int> routing;
-
+    vector<Kendaraan> vechicle;
+ 
     Siswa(){}
 
-    Siswa(int i,int n) : destination(n),id(i) {
+    Siswa(int i, int n,int kapasitas) : destination(n), id(i), kapasitas(kapasitas) {
         Setup();
     }
 
@@ -138,16 +160,88 @@ public:
                 num = j;
             }
             Temp[num] = 1.1;  // Set Temp[num] to a value not less than 1.0 to avoid being selected again
-            routes[num] = i;  // Assign the route index
+            routes[num] = i + 1;  // Assign the route index
         }
     }
 
-    void Try_Route(const DataJarak& jarak){
+    void CleanUp(){
+        routes.clear();
+        vechicle.clear();
+    }
 
+    void TryRoute(const DataJarak& jarak){
+        vector<int> temp = routes; 
+        int id = 1;
+        cout << endl << "Murid " << this->id  << " Lets goo!!" << endl << endl;
+        while(temp.size() != 0){
+            Kendaraan TempVechicle(id , kapasitas);
+            TempVechicle.kapasitas = 0;
+            cout << "Kendaraan " << TempVechicle.id << " berangkat ======"<< endl << endl;
+            //cout << TempVechicle.id << " " << TempVechicle.kapasitas << endl;
+            for(auto it = temp.begin(); it != temp.end();){
+                int current = *it;
+                cout << "Mencoba route : " << current << endl;
+
+                if(TempVechicle.kapasitas + jarak.Data[current].permintaan > TempVechicle.max){
+                    TempVechicle.waktu += jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()];
+                    TempVechicle.kapasitas = 0;
+                    TempVechicle.routing.push_back(0);
+                    cout << "Kendaraan mengalami overload dan akan kembali ke depot" << endl << endl;
+                    continue; 
+                }
+
+                if(TempVechicle.waktu + jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()] + jarak.Data[current].permintaan >= jarak.Data[current].waktu_tutup){
+                    cout << "Route akan diambil kendaraan berikutnya" << endl << endl;
+                    ++it;
+                    continue;
+                }
+
+                if(TempVechicle.waktu <= jarak.Data[current].waktu_buka){
+                    TempVechicle.waktu = jarak.Data[current].waktu_buka + jarak.Data[current].permintaan;
+                    TempVechicle.routing.push_back(current);
+                    TempVechicle.kapasitas += jarak.Data[current].permintaan;
+                    cout << "Route telah diamankan oleh kendaraan ini" << endl << endl;
+                    it = temp.erase(it);
+                    continue;
+                }
+
+                TempVechicle.waktu += jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()] + jarak.Data[current].permintaan;
+                TempVechicle.routing.push_back(current);
+                TempVechicle.kapasitas += jarak.Data[current].permintaan;
+                cout << "Route telah diamankan oleh kendaraan ini" << endl << endl;
+                it = temp.erase(it);
+            }
+            id++;
+            vechicle.push_back(TempVechicle);
+            cout << "route : " ;
+            for(auto route : TempVechicle.routing){
+                 cout << route << " - ";
+             }
+            cout << "0" << endl;
+        }
+    }
+
+    void Assess(){
+        int tdt = 0;
+        for(auto vehicle : vechicle){
+            tdt += vehicle.waktu;
+        } 
+        int rdt = vechicle.front().waktu - vechicle.back().waktu;
+        point = vechicle.size() * 100000 + tdt * 100 + rdt * 0.00005;
     }
 
     void Evaluate(){
-
+        vector<double> temp(initial.size());
+        switch (status)
+        {
+        case 0: //BEST
+            /* code */
+            break;
+        
+        default:
+            break;
+        }
+        initial = temp;
     }
 
     void Print_Status(){
@@ -159,40 +253,58 @@ class Alghorithm {
 public:
     int num_of_siswa;
     int iteration;
+    int kapasitas;
     vector<Siswa> para_siswa;
     DataJarak Jarak;
 
     Alghorithm() {}
 
     Alghorithm(DataJarak dist) : Jarak(dist){
-        Jarak.PrintDataJarak();
-        Jarak.PrintDataWaktuTempuh();
-        set_siswa();
     }
 
     void set_siswa() {
         for (int i = 0; i < num_of_siswa; i++){
-            para_siswa.push_back(Siswa(i, Jarak.Data.size()));
+            para_siswa.push_back(Siswa(i + 1 , Jarak.Data.size() - 1, kapasitas));
         }
     }
 
     void Input(){
-        cout << "Inputkan Jumlah Siswa : "  << endl;
+        cout << "Inputkan Jumlah Siswa : " ;
         cin >> num_of_siswa;
-        cout << "Inputkan Jumlah Iterasi : " << endl;
+        cout << "Inputkan Jumlah Iterasi : " ;
         cin >>  iteration;
+        cout << "Inputkan Kapasitas Kendaraan : " ;
+        cin >> kapasitas;
     }
 
     void Iterate(){
         for(int i=0; i<iteration; i++){
             for(int j=0; j<num_of_siswa; j++){
-                para_siswa[j].Try_Route(Jarak);
+                para_siswa[j].TryRoute(Jarak);
+                para_siswa[j].Assess();
+            }
+            BestStudent();
+        }
+    }
+
+    void BestStudent(){
+        int minIndex = 0;
+        int minvalue = para_siswa[0].point;
+        for(int i =0;i< num_of_siswa; i++){
+            if(para_siswa[i].point < minvalue){
+                minIndex = i;
+                minvalue = para_siswa[i].point;
             }
         }
+        para_siswa[minIndex].status = 0; //BEST
+        cout << endl << "best student : " << minIndex + 1 << endl;
+        cout << "score : " << minvalue << endl;
     }
 
     void Start(){
         Input();
+        set_siswa();
+        Iterate();
     }
 };
 
@@ -241,10 +353,12 @@ int main() {
     vector<TargetData> targets = readDataFromCSV(csv_file);
 
     // Call the function to print initial data
-    printInitialData(targets);
+    //printInitialData(targets);
 
     DataJarak dataJarak(targets);
     Alghorithm sistem(dataJarak);
+
+    sistem.Start();
 
     return 0;
 }
