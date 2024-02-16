@@ -4,6 +4,7 @@
 #include<string>
 #include<vector>
 #include<cmath>
+#include<regex>
 #include<iomanip>
 #include<random>
 
@@ -119,8 +120,10 @@ public:
     int destination;
     int kapasitas;
     int point;
+    int prefpoint;
     int status;
     vector<double> initial;
+    vector<double> bestpoint;
     vector<int> routes;
     vector<Kendaraan> vechicle;
  
@@ -145,7 +148,11 @@ public:
             Temp[i] = random;  // Store the random number in Temp
         }
 
-        initial = Temp;
+        initial = Temp;  
+    }
+
+    void GetRoute(){
+        vector<double> Temp = initial;
         routes.resize(destination);
 
         for (int i = 0; i < destination; i++) {
@@ -230,23 +237,60 @@ public:
         point = vechicle.size() * 100000 + tdt * 100 + rdt * 0.00005;
     }
 
-    void Evaluate(){
+    void Evaluate(int jumlah, const vector<Siswa>& para_siswa){
         vector<double> temp(initial.size());
+        vector<int> j = randomData(initial.size(),1,jumlah);
+        vector<int> k = randomData(initial.size(),1,2);
+        vector<double> rand = randomDouble(initial.size());
         switch (status)
         {
-        case 0: //BEST
-            /* code */
+        case 0: //BEST   
+            for(int i = 0; i < initial.size(); i++){
+                temp[i] = initial[i] + (-1 ^ k[i]) * rand[i] * (initial[i] - para_siswa[j[i]].initial[i]); 
+            }
             break;
-        
+        case 1: //GOOD
+            for(int i = 0; i < initial.size(); i++){
+                temp[i] = rand[i];
+            }
+            break;
+        case 2: //AVERAGE
+
+            break;
+        case 3: //RANDOM
+
+            break;
         default:
             break;
         }
         initial = temp;
     }
 
-    void Print_Status(){
-
+    vector<double> randomDouble(int size){
+    vector<double> Temp(size);
+    for (int i = 0; i < size; i++) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        double minr = 0.0;
+        double maxr = 1.0;
+        std::uniform_real_distribution<double> dis(minr, maxr);
+        double random = dis(gen);
+        Temp[i] = random;  // Store the random number in Temp
     }
+    return Temp;
+}
+
+vector<int> randomData(int size, int min, int max){
+    vector<int> temp;
+    for(int i = 0; i < size; i++){
+        random_device rd;
+        mt19937 gen(rd());
+        uniform_int_distribution<int> dit(min,max);
+
+        temp.push_back(dit(gen));
+    }
+    return temp;
+}
 };
 
 class Alghorithm {
@@ -280,9 +324,15 @@ public:
     void Iterate(){
         for(int i=0; i<iteration; i++){
             for(int j=0; j<num_of_siswa; j++){
+                para_siswa[j].GetRoute();
                 para_siswa[j].TryRoute(Jarak);
                 para_siswa[j].Assess();
+                if (i > 0 && para_siswa[j].point > para_siswa[j].prefpoint){
+                    para_siswa[j].point = para_siswa[j].prefpoint;
+                }
+                para_siswa[j].prefpoint = para_siswa[j].point;
             }
+            PrepareNext();
             BestStudent();
         }
     }
@@ -301,6 +351,17 @@ public:
         cout << "score : " << minvalue << endl;
     }
 
+    void PrepareNext(){
+        for (int i = 0; i < num_of_siswa; i++) {
+            random_device rd;
+            mt19937 gen(rd());
+
+            uniform_int_distribution<int> dit(1,3);
+            int rand = dit(gen);
+            para_siswa[i].status = rand;
+        }
+    }
+
     void Start(){
         Input();
         set_siswa();
@@ -308,18 +369,45 @@ public:
     }
 };
 
-// Fungsi untuk membaca data dari file CSV.
+vector<double> randomDouble(int size){
+    vector<double> Temp(size);
+    for (int i = 0; i < size; i++) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        double minr = 0.0;
+        double maxr = 1.0;
+        std::uniform_real_distribution<double> dis(minr, maxr);
+        double random = dis(gen);
+        Temp[i] = random;  // Store the random number in Temp
+    }
+    return Temp;
+}
+
+vector<int> randomData(int size, int min, int max){
+    vector<int> temp;
+    for(int i = 0; i < size; i++){
+        random_device rd;
+        mt19937 gen(rd());
+        uniform_int_distribution<int> dit(min,max);
+
+        temp.push_back(dit(gen));
+    }
+    return temp;
+}
+
 vector<TargetData> readDataFromCSV(const string& filePath) {
     vector<TargetData> data;
     ifstream file(filePath);
     string line;
-    getline(file, line); // Melewati header
+    getline(file, line); // Skip the header
 
     while (getline(file, line)) {
         stringstream iss(line);
         TargetData targetData;
         string value;
-        getline(iss, value, ','); // Melewati kolom 'Target'
+
+        // Read each value separated by comma
+        getline(iss, value, ','); // Skipping the 'Target' column
         getline(iss, value, ','); targetData.x = stoi(value);
         getline(iss, value, ','); targetData.y = stoi(value);
         getline(iss, value, ','); targetData.permintaan = stoi(value);
@@ -349,10 +437,46 @@ void printInitialData(const vector<TargetData>& targets) {
 
 int main() {
     // Pastikan file ini ada di direktori yang sama dengan executable atau berikan path lengkap.
-    string csv_file = "sample.csv";
-    vector<TargetData> targets = readDataFromCSV(csv_file);
+    int num;
 
-    // Call the function to print initial data
+    string csv_file = "sample.csv";
+    string datakecil = "Data Kecil.csv";
+    string datasedang = "Data Sedang.csv";
+    string databesar = "Data Besar.csv";
+    vector<TargetData> csv = readDataFromCSV(csv_file);
+    vector<TargetData> kecil = readDataFromCSV(datakecil);
+    vector<TargetData> sedang = readDataFromCSV(datasedang);
+    vector<TargetData> besar = readDataFromCSV(databesar);
+
+    vector<TargetData> targets;
+
+    cout << "Pilih file yang akan digunakan : " << endl 
+         << "1. Data Kecil" << endl 
+         << "2. Data Sedang" << endl 
+         << "3. Data Besar" << endl
+         << endl;
+
+    cin >> num;
+
+    switch (num)
+    {
+    case 1:
+        cout << "data yang akan digunakan : data kecil" << endl;
+        targets = kecil;
+        break;
+    case 2:
+        cout << "data yang akan digunakan : data sedang" << endl;
+        targets = sedang;
+        break;
+    case 3:
+        cout << "data yang akan digunakan : data besar" << endl;
+        targets = besar;
+        break;
+    
+    default:
+        targets = csv;
+    }
+    //Call the function to print initial data
     //printInitialData(targets);
 
     DataJarak dataJarak(targets);
