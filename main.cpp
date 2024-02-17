@@ -334,7 +334,7 @@ public:
     vector<double> meanData(const vector<Siswa>& para_siswa, int size){
         vector<double> temparray;
         for(int i=0; i < size; i++){
-            double temp;
+            double temp=0;
             for(int j = 0; j < para_siswa.size(); j++){
                 temp += para_siswa[j].bestpoint[i];    
             }
@@ -347,7 +347,7 @@ public:
     vector<double> bestData(const vector<Siswa>& para_siswa){
         vector<double> temparray;
         for(auto student : para_siswa){
-            if(student.status = 0){
+            if(student.status == 0){
                 temparray = student.bestpoint;
             }
         }
@@ -385,6 +385,8 @@ public:
 
     void Iterate(){
         for(int i=0; i<iteration; i++){
+            cout<< "================================================================="<< endl << endl;
+            cout<<"Iterasi ke = "<< i + 1 << endl;
             for(int j=0; j<num_of_siswa; j++){
                 para_siswa[j].GetRoute();
                 para_siswa[j].TryRoute(Jarak);
