@@ -125,6 +125,7 @@ public:
     vector<double> bestpoint;
     vector<int> routes;
     vector<Kendaraan> vechicle;
+    vector<Kendaraan> bestroute;
  
     Siswa(){}
 
@@ -162,7 +163,7 @@ public:
                 min = Temp[j];
                 num = j;
             }
-            Temp[num] = 1.1;  // Set Temp[num] to a value not less than 1.0 to avoid being selected again
+            Temp[num] = 1000;  // Set Temp[num] to a value not less than 1.0 to avoid being selected again
             routes[num] = i + 1;  // Assign the route index
         }
     }
@@ -175,11 +176,11 @@ public:
     void TryRoute(DataJarak jarak){
         vector<int> temp = routes; 
         int id = 1;
-        cout << endl << "Murid " << this->id  << " Lets goo!!" << endl << endl;
+        cout << endl << "=======================================================" << endl << "Murid " << this->id  << " Lets goo!!" << endl;
         while(temp.size() != 0){
             Kendaraan TempVechicle(id , kapasitas);
             TempVechicle.kapasitas = 0;
-            cout << "Kendaraan " << TempVechicle.id << " berangkat ======"<< endl << endl;
+            //cout << "Kendaraan " << TempVechicle.id << " berangkat ======"<< endl;
             //cout << TempVechicle.id << " " << TempVechicle.kapasitas << endl;
             for(auto it = temp.begin(); it != temp.end();){
                 int current = *it;
@@ -226,11 +227,11 @@ public:
             }
             id++;
             vechicle.push_back(TempVechicle);
-            cout << "route : " ;
-            for(auto route : TempVechicle.routing){
-                 cout << route << " - ";
-             }
-            cout << "0" << endl;
+            // cout << "route : " ;
+            // for(auto route : TempVechicle.routing){
+            //      cout << route << " - ";
+            //  }
+            // cout << "0" << endl;
         }
     }
 
@@ -245,39 +246,67 @@ public:
 
     void Evaluate(const vector<Siswa>& para_siswa){
         vector<double> temp(initial.size());
-        vector<int> j = randomData(initial.size(),1,para_siswa.size());
-        vector<int> k = randomData(initial.size(),1,2);
-        vector<double> rand = randomDouble(initial.size());
-        vector<double> min = minData(para_siswa, initial.size());
-        vector<double> max = maxData(para_siswa, initial.size());
-        vector<double> mean = meanData(para_siswa, initial.size());
-        vector<double> best = bestData(para_siswa);
         switch (status)
         {
         case 0: //BEST   
-            for(int i = 0; i < initial.size(); i++){
-                temp[i] = initial[i] + pow(-1,k[i]) * rand[i] * (initial[i] - para_siswa[j[i]].initial[i]); 
-            }
+            temp = caseBest(para_siswa);
             break;
         case 1: //GOOD
-            for(int i = 0; i < initial.size(); i++){
-                temp[i] = initial[i] + (rand[i] * (best[i] - initial[i])) + (rand[i] * (mean[i] - initial[i]));
-            }
+            temp = caseGood(para_siswa);
             break;
         case 2: //AVERAGE
-            for(int i = 0; i < initial.size(); i++){
-                temp[i] = initial[i] + (rand[i] * (mean[i] - initial[i]));
-            }
+            temp = caseAverage(para_siswa);
             break;
         case 3: //RANDOM
-            for(int i = 0; i < initial.size(); i++){
-                temp[i] = initial[i] + (rand[i] * (max[i] - min[i]));
-            }
+            temp = caseRandom(para_siswa);
             break;
         default:
             break;
         }
         initial = temp;
+    }
+
+    vector<double> caseBest(const vector<Siswa>& para_siswa){
+        vector<double> temp(initial.size());
+        vector<int> j = randomData(initial.size(),1,para_siswa.size());
+        vector<int> k = randomData(initial.size(),1,2);
+        vector<double> rand = randomDouble(initial.size());
+        for(int i = 0; i < initial.size(); i++){
+            temp[i] = initial[i] + pow(-1,k[i]) * rand[i] * (initial[i] - para_siswa[j[i]-1].initial[i]); 
+        }
+        return temp;
+    }
+
+    vector<double> caseGood(const vector<Siswa>& para_siswa){
+        vector<double> temp(initial.size());
+        vector<double> rand = randomDouble(initial.size());
+        vector<double> mean = meanData(para_siswa, initial.size());
+        vector<double> best = bestData(para_siswa);
+        for(int i = 0; i < initial.size(); i++){
+            temp[i] = initial[i] + (rand[i] * (best[i] - initial[i])) + (rand[i] * (mean[i] - initial[i]));
+        }
+        return temp;
+    }
+
+    vector<double> caseAverage(const vector<Siswa>& para_siswa){
+        vector<double> temp(initial.size());
+        vector<double> rand = randomDouble(initial.size());
+        vector<double> mean = meanData(para_siswa, initial.size());
+        for(int i = 0; i < initial.size(); i++){
+            temp[i] = initial[i] + (rand[i] * (mean[i] - initial[i]));
+        }    
+        return temp;
+    }
+
+    vector<double> caseRandom(const vector<Siswa>& para_siswa){
+        vector<double> temp(initial.size());
+        vector<double> rand = randomDouble(initial.size());
+        vector<double> min = minData(para_siswa, initial.size());
+        vector<double> max = maxData(para_siswa, initial.size());
+        for(int i = 0; i < initial.size(); i++){
+            temp[i] = initial[i] + (rand[i] * (max[i] - min[i]));
+        }
+        return temp;
     }
 
     vector<double> randomDouble(int size){
@@ -353,6 +382,24 @@ public:
         }
         return temparray;
     }
+
+    void report(){
+        cout << "--------------------------------" << endl 
+             << "Murid : " << this->id << endl
+             << "Score : " << this->prefpoint << endl << endl;
+        for(int i = 0; i < bestroute.size(); i++){
+            vector<int> temp = bestroute[i].routing;
+            cout << "Route " << i+1 << " : ";
+            for(int j = 0; j < temp.size() - 1 ; j++){
+                cout << temp[j] << " - ";
+            }
+            if(temp[temp.back()] == 0){
+                cout << 0 << endl;
+            }else{
+                cout << temp[temp.size()-1] << " - 0" << endl;
+            }
+        }
+    }
 };
 
 class Alghorithm {
@@ -377,7 +424,7 @@ public:
     void Input(){
         cout << "Inputkan Jumlah Siswa : " ;
         cin >> num_of_siswa;
-        cout << "Inputkan Jumlah Iterasi : " ;
+        cout << "Inputkan Jumlah Mata Pelajaran : " ;
         cin >>  iteration;
         cout << "Inputkan Kapasitas Kendaraan : " ;
         cin >> kapasitas;
@@ -391,29 +438,68 @@ public:
                 para_siswa[j].GetRoute();
                 para_siswa[j].TryRoute(Jarak);
                 para_siswa[j].Assess();
-                para_siswa[j].bestpoint = para_siswa[j].initial;
-                if (i > 0 && para_siswa[j].point > para_siswa[j].prefpoint){
-                    para_siswa[j].point = para_siswa[j].prefpoint;
+                cout << "score : " << para_siswa[j].point << endl;
+            }
+            cout << "===============================================================" << endl;
+            cout << "Hasil Pelajaran ke-" << i << endl << endl;
+            if (i > 0){
+                for (int j = 0; j < num_of_siswa; j++){
+                    if(para_siswa[j].point < para_siswa[j].prefpoint){
+                        cout << "Murid " << para_siswa[j].id << endl;
+                        cout << "score lama: " << para_siswa[j].prefpoint << endl;
+                        para_siswa[j].bestpoint = para_siswa[j].initial;
+                        para_siswa[j].prefpoint = para_siswa[j].point;
+                        para_siswa[j].bestroute = para_siswa[j].vechicle;
+                        cout << "score baru: " << para_siswa[j].prefpoint << endl;
+                        cout << "Update Score diterima" << endl << endl;
+                    }else{
+                        cout << "Murid " << para_siswa[j].id << endl;
+                        cout << "score lama: " << para_siswa[j].prefpoint << endl;
+                        cout << "score baru: " << para_siswa[j].point << endl;
+                        cout << "Update Score ditolak" << endl << endl;
+                    }
                 }
-                para_siswa[j].prefpoint = para_siswa[j].point;
+            }else{
+                for (int j = 0; j < num_of_siswa; j++){
+                    para_siswa[j].bestpoint = para_siswa[j].initial;
+                    para_siswa[j].prefpoint = para_siswa[j].point;
+                    para_siswa[j].bestroute = para_siswa[j].vechicle;
+                    cout << "Murid " << para_siswa[j].id << endl;
+                    cout << "score : " << para_siswa[j].prefpoint << endl;
+                }
             }
             PrepareNext();
             BestStudent();
+            if(i == iteration - 1){
+                continue;
+            }
             for (int j = 0; j < num_of_siswa; j++)
             {
                 para_siswa[j].Evaluate(para_siswa);
+                para_siswa[j].CleanUp();
             }
-            
         }
+    }
+
+    void Summarize(){
+        Siswa BestStudent;
+        for(int i = 0; i < num_of_siswa; i++){
+            if(para_siswa[i].status == 0){
+                BestStudent = para_siswa[i];
+            }
+        }
+        cout << endl << "Best Case Student" << endl;
+        BestStudent.report();
+        cout << endl << endl << "Perhitungan Selesai" << endl;
     }
 
     void BestStudent(){
         int minIndex = 0;
-        int minvalue = para_siswa[0].point;
+        int minvalue = para_siswa[0].prefpoint;
         for(int i =0;i< num_of_siswa; i++){
-            if(para_siswa[i].point < minvalue){
+            if(para_siswa[i].prefpoint < minvalue){
                 minIndex = i;
-                minvalue = para_siswa[i].point;
+                minvalue = para_siswa[i].prefpoint;
             }
         }
         para_siswa[minIndex].status = 0; //BEST
@@ -433,6 +519,7 @@ public:
         Input();
         set_siswa();
         Iterate();
+        Summarize();
     }
 };
 
@@ -539,8 +626,6 @@ int main() {
     default:
         targets = csv;
     }
-    //Call the function to print initial data
-    //printInitialData(targets);
 
     DataJarak dataJarak(targets);
     Alghorithm sistem(dataJarak);
