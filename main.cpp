@@ -10,6 +10,9 @@
 
 using namespace std;
 
+std::random_device rd;
+std::mt19937 gen(rd());
+
 // Definisikan struktur untuk menyimpan data.
 struct TargetData {
     int x;
@@ -24,20 +27,16 @@ struct TargetData {
 class Kendaraan {
 public:
     int id;
-    int kapasitas;
+    int kapasitas = 0;
     int max;
-    int waktu;
+    int waktu = 0;
     vector<int> routing;
 
     Kendaraan(){
-        waktu = 0;
-        kapasitas = 0;
         routing.push_back(0);
     }
 
     Kendaraan(int Id, int kapasitas) : id(Id), max(kapasitas) {
-        waktu = 0;
-        kapasitas = 0;
         routing.push_back(0);
     }
 
@@ -134,9 +133,6 @@ public:
     }
 
     void Setup() {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-
         // Resize Temp to the size of destination
         vector<double> Temp(destination);
 
@@ -176,7 +172,7 @@ public:
         vechicle.clear();
     }
 
-    void TryRoute(const DataJarak& jarak){
+    void TryRoute(DataJarak jarak){
         vector<int> temp = routes; 
         int id = 1;
         cout << endl << "Murid " << this->id  << " Lets goo!!" << endl << endl;
@@ -187,18 +183,28 @@ public:
             //cout << TempVechicle.id << " " << TempVechicle.kapasitas << endl;
             for(auto it = temp.begin(); it != temp.end();){
                 int current = *it;
-                cout << "Mencoba route : " << current << endl;
+                //cout << "Mencoba route : " << current << endl;
 
                 if(TempVechicle.kapasitas + jarak.Data[current].permintaan > TempVechicle.max){
                     TempVechicle.waktu += jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()];
                     TempVechicle.kapasitas = 0;
                     TempVechicle.routing.push_back(0);
-                    cout << "Kendaraan mengalami overload dan akan kembali ke depot" << endl << endl;
+                    //cout << "Kendaraan mengalami overload dan akan kembali ke depot" << endl << endl;
                     continue; 
                 }
 
                 if(TempVechicle.waktu + jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()] + jarak.Data[current].permintaan >= jarak.Data[current].waktu_tutup){
-                    cout << "Route akan diambil kendaraan berikutnya" << endl << endl;
+                    if(TempVechicle.waktu + jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()] < jarak.Data[current].waktu_tutup){
+                        int muatan = jarak.Data[current].waktu_tutup - ( TempVechicle.waktu + jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()] );
+                        jarak.Data[current].permintaan -= muatan;
+                        TempVechicle.waktu = jarak.Data[current].waktu_tutup;
+                        TempVechicle.routing.push_back(current);
+                        TempVechicle.kapasitas += muatan;
+                        //cout << "Sebagian muatan pada rute akan dilanjutkan kendaraan selanjutanya" << endl << endl;
+                        ++it;
+                        continue;
+                    }
+                    //cout << "Route akan diambil kendaraan berikutnya" << endl << jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()] << endl;
                     ++it;
                     continue;
                 }
@@ -207,7 +213,7 @@ public:
                     TempVechicle.waktu = jarak.Data[current].waktu_buka + jarak.Data[current].permintaan;
                     TempVechicle.routing.push_back(current);
                     TempVechicle.kapasitas += jarak.Data[current].permintaan;
-                    cout << "Route telah diamankan oleh kendaraan ini" << endl << endl;
+                    //cout << "Route telah diamankan oleh kendaraan ini" << endl << endl;
                     it = temp.erase(it);
                     continue;
                 }
@@ -215,7 +221,7 @@ public:
                 TempVechicle.waktu += jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()] + jarak.Data[current].permintaan;
                 TempVechicle.routing.push_back(current);
                 TempVechicle.kapasitas += jarak.Data[current].permintaan;
-                cout << "Route telah diamankan oleh kendaraan ini" << endl << endl;
+                //cout << "Route telah diamankan oleh kendaraan ini" << endl << endl;
                 it = temp.erase(it);
             }
             id++;
@@ -237,28 +243,36 @@ public:
         point = vechicle.size() * 100000 + tdt * 100 + rdt * 0.00005;
     }
 
-    void Evaluate(int jumlah, const vector<Siswa>& para_siswa){
+    void Evaluate(const vector<Siswa>& para_siswa){
         vector<double> temp(initial.size());
-        vector<int> j = randomData(initial.size(),1,jumlah);
+        vector<int> j = randomData(initial.size(),1,para_siswa.size());
         vector<int> k = randomData(initial.size(),1,2);
         vector<double> rand = randomDouble(initial.size());
+        vector<double> min = minData(para_siswa, initial.size());
+        vector<double> max = maxData(para_siswa, initial.size());
+        vector<double> mean = meanData(para_siswa, initial.size());
+        vector<double> best = bestData(para_siswa);
         switch (status)
         {
         case 0: //BEST   
             for(int i = 0; i < initial.size(); i++){
-                temp[i] = initial[i] + (-1 ^ k[i]) * rand[i] * (initial[i] - para_siswa[j[i]].initial[i]); 
+                temp[i] = initial[i] + pow(-1,k[i]) * rand[i] * (initial[i] - para_siswa[j[i]].initial[i]); 
             }
             break;
         case 1: //GOOD
             for(int i = 0; i < initial.size(); i++){
-                temp[i] = rand[i];
+                temp[i] = initial[i] + (rand[i] * (best[i] - initial[i])) + (rand[i] * (mean[i] - initial[i]));
             }
             break;
         case 2: //AVERAGE
-
+            for(int i = 0; i < initial.size(); i++){
+                temp[i] = initial[i] + (rand[i] * (mean[i] - initial[i]));
+            }
             break;
         case 3: //RANDOM
-
+            for(int i = 0; i < initial.size(); i++){
+                temp[i] = initial[i] + (rand[i] * (max[i] - min[i]));
+            }
             break;
         default:
             break;
@@ -269,8 +283,7 @@ public:
     vector<double> randomDouble(int size){
     vector<double> Temp(size);
     for (int i = 0; i < size; i++) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
+        
         double minr = 0.0;
         double maxr = 1.0;
         std::uniform_real_distribution<double> dis(minr, maxr);
@@ -278,19 +291,68 @@ public:
         Temp[i] = random;  // Store the random number in Temp
     }
     return Temp;
-}
-
-vector<int> randomData(int size, int min, int max){
-    vector<int> temp;
-    for(int i = 0; i < size; i++){
-        random_device rd;
-        mt19937 gen(rd());
-        uniform_int_distribution<int> dit(min,max);
-
-        temp.push_back(dit(gen));
     }
-    return temp;
-}
+
+    vector<int> randomData(int size, int min, int max){
+        vector<int> temp;
+        for(int i = 0; i < size; i++){
+            uniform_int_distribution<int> dit(min,max);
+
+            temp.push_back(dit(gen));
+        }
+        return temp;
+    }
+
+    vector<double> minData(const vector<Siswa>& para_siswa, int size){
+        vector<double> temparray;
+        for(int i=0; i < size; i++){
+            double temp = para_siswa[0].bestpoint[i];
+            for(int j = 0; j < para_siswa.size(); j++){
+                if(para_siswa[j].bestpoint[i] < temp){
+                    temp = para_siswa[j].bestpoint[i];
+                }
+            }
+            temparray.push_back(temp);
+        }
+        return temparray;
+    }
+
+    vector<double> maxData(const vector<Siswa>& para_siswa, int size){
+        vector<double> temparray;
+        for(int i=0; i < size; i++){
+            double temp = para_siswa[0].bestpoint[i];
+            for(int j = 0; j < para_siswa.size(); j++){
+                if(para_siswa[j].bestpoint[i] > temp){
+                    temp = para_siswa[j].bestpoint[i];
+                }
+            }
+            temparray.push_back(temp);
+        }
+        return temparray;
+    }
+
+    vector<double> meanData(const vector<Siswa>& para_siswa, int size){
+        vector<double> temparray;
+        for(int i=0; i < size; i++){
+            double temp;
+            for(int j = 0; j < para_siswa.size(); j++){
+                temp += para_siswa[j].bestpoint[i];    
+            }
+            temp /= para_siswa.size();
+            temparray.push_back(temp);
+        }
+        return temparray;
+    }
+
+    vector<double> bestData(const vector<Siswa>& para_siswa){
+        vector<double> temparray;
+        for(auto student : para_siswa){
+            if(student.status = 0){
+                temparray = student.bestpoint;
+            }
+        }
+        return temparray;
+    }
 };
 
 class Alghorithm {
@@ -327,6 +389,7 @@ public:
                 para_siswa[j].GetRoute();
                 para_siswa[j].TryRoute(Jarak);
                 para_siswa[j].Assess();
+                para_siswa[j].bestpoint = para_siswa[j].initial;
                 if (i > 0 && para_siswa[j].point > para_siswa[j].prefpoint){
                     para_siswa[j].point = para_siswa[j].prefpoint;
                 }
@@ -334,6 +397,11 @@ public:
             }
             PrepareNext();
             BestStudent();
+            for (int j = 0; j < num_of_siswa; j++)
+            {
+                para_siswa[j].Evaluate(para_siswa);
+            }
+            
         }
     }
 
@@ -353,9 +421,6 @@ public:
 
     void PrepareNext(){
         for (int i = 0; i < num_of_siswa; i++) {
-            random_device rd;
-            mt19937 gen(rd());
-
             uniform_int_distribution<int> dit(1,3);
             int rand = dit(gen);
             para_siswa[i].status = rand;
@@ -372,8 +437,6 @@ public:
 vector<double> randomDouble(int size){
     vector<double> Temp(size);
     for (int i = 0; i < size; i++) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
         double minr = 0.0;
         double maxr = 1.0;
         std::uniform_real_distribution<double> dis(minr, maxr);
@@ -386,8 +449,6 @@ vector<double> randomDouble(int size){
 vector<int> randomData(int size, int min, int max){
     vector<int> temp;
     for(int i = 0; i < size; i++){
-        random_device rd;
-        mt19937 gen(rd());
         uniform_int_distribution<int> dit(min,max);
 
         temp.push_back(dit(gen));
