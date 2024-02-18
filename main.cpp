@@ -31,6 +31,7 @@ public:
     int max;
     int waktu = 0;
     vector<int> routing;
+    int caps = 0;
 
     Kendaraan(){
         routing.push_back(0);
@@ -163,7 +164,7 @@ public:
                 min = Temp[j];
                 num = j;
             }
-            Temp[num] = 1000;  // Set Temp[num] to a value not less than 1.0 to avoid being selected again
+            Temp[num] = 10000000;  // Set Temp[num] to a value not less than 1.0 to avoid being selected again
             routes[num] = i + 1;  // Assign the route index
         }
     }
@@ -176,7 +177,7 @@ public:
     void TryRoute(DataJarak jarak){
         vector<int> temp = routes; 
         int id = 1;
-        cout << endl << "=======================================================" << endl << "Murid " << this->id  << " Lets goo!!" << endl;
+        // cout << endl << "Murid " << this->id  << " Mulai Pelajaran" << endl;
         while(temp.size() != 0){
             Kendaraan TempVechicle(id , kapasitas);
             TempVechicle.kapasitas = 0;
@@ -185,6 +186,7 @@ public:
             for(auto it = temp.begin(); it != temp.end();){
                 int current = *it;
                 //cout << "Mencoba route : " << current << endl;
+                // cout << jarak.Data[current].permintaan << endl;
 
                 if(TempVechicle.kapasitas + jarak.Data[current].permintaan > TempVechicle.max){
                     TempVechicle.waktu += jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()];
@@ -201,6 +203,7 @@ public:
                         TempVechicle.waktu = jarak.Data[current].waktu_tutup;
                         TempVechicle.routing.push_back(current);
                         TempVechicle.kapasitas += muatan;
+                        TempVechicle.caps += muatan;
                         //cout << "Sebagian muatan pada rute akan dilanjutkan kendaraan selanjutanya" << endl << endl;
                         ++it;
                         continue;
@@ -214,6 +217,7 @@ public:
                     TempVechicle.waktu = jarak.Data[current].waktu_buka + jarak.Data[current].permintaan;
                     TempVechicle.routing.push_back(current);
                     TempVechicle.kapasitas += jarak.Data[current].permintaan;
+                    TempVechicle.caps += jarak.Data[current].permintaan;
                     //cout << "Route telah diamankan oleh kendaraan ini" << endl << endl;
                     it = temp.erase(it);
                     continue;
@@ -222,6 +226,7 @@ public:
                 TempVechicle.waktu += jarak.Data[current].data_waktu_tempuh[TempVechicle.routing.back()] + jarak.Data[current].permintaan;
                 TempVechicle.routing.push_back(current);
                 TempVechicle.kapasitas += jarak.Data[current].permintaan;
+                TempVechicle.caps += jarak.Data[current].permintaan;
                 //cout << "Route telah diamankan oleh kendaraan ini" << endl << endl;
                 it = temp.erase(it);
             }
@@ -384,12 +389,13 @@ public:
     }
 
     void report(){
-        cout << "--------------------------------" << endl 
+        cout << "----------------------------------------------------------------" << endl 
              << "Murid : " << this->id << endl
              << "Score : " << this->prefpoint << endl << endl;
         for(int i = 0; i < bestroute.size(); i++){
             vector<int> temp = bestroute[i].routing;
-            cout << "Route " << i+1 << " : ";
+            cout << "======== Kendaraan " << i+1 << "=========" << endl;
+            cout << "Route : ";
             for(int j = 0; j < temp.size() - 1 ; j++){
                 cout << temp[j] << " - ";
             }
@@ -398,6 +404,8 @@ public:
             }else{
                 cout << temp[temp.size()-1] << " - 0" << endl;
             }
+            cout << "permintaan : " << bestroute[i].caps << endl;
+            cout << "waktu : " << bestroute[i].waktu << endl;
         }
     }
 };
@@ -406,7 +414,8 @@ class Alghorithm {
 public:
     int num_of_siswa;
     int iteration;
-    int kapasitas;
+    int mapel;
+    int kapasitas = 60;
     vector<Siswa> para_siswa;
     DataJarak Jarak;
 
@@ -424,59 +433,78 @@ public:
     void Input(){
         cout << "Inputkan Jumlah Siswa : " ;
         cin >> num_of_siswa;
-        cout << "Inputkan Jumlah Mata Pelajaran : " ;
+        cout << "Inputkan Jumlah Iteration : " ;
         cin >>  iteration;
-        cout << "Inputkan Kapasitas Kendaraan : " ;
-        cin >> kapasitas;
+        cout << "Inputkan Jumlah Mata Pelajaran : " ;
+        cin >>  mapel;
     }
 
     void Iterate(){
-        for(int i=0; i<iteration; i++){
-            cout<< "================================================================="<< endl << endl;
-            cout<<"Iterasi ke = "<< i + 1 << endl;
-            for(int j=0; j<num_of_siswa; j++){
-                para_siswa[j].GetRoute();
-                para_siswa[j].TryRoute(Jarak);
-                para_siswa[j].Assess();
-                cout << "score : " << para_siswa[j].point << endl;
-            }
-            cout << "===============================================================" << endl;
-            cout << "Hasil Pelajaran ke-" << i << endl << endl;
-            if (i > 0){
-                for (int j = 0; j < num_of_siswa; j++){
-                    if(para_siswa[j].point < para_siswa[j].prefpoint){
-                        cout << "Murid " << para_siswa[j].id << endl;
-                        cout << "score lama: " << para_siswa[j].prefpoint << endl;
+        for(int h=0; h<iteration ; h++){
+            for(int i=0; i<mapel +1 ; i++){
+                // cout<< "================================================================"<< endl << endl;
+                // cout<<"Iterasi ke = "<< i + 1 << endl;
+                for(int j=0; j<num_of_siswa; j++){
+                    para_siswa[j].GetRoute();
+                    para_siswa[j].TryRoute(Jarak);
+                    para_siswa[j].Assess();
+                    if ( i < 1) {
+                        cout << endl << "Murid " << para_siswa[j].id  << " Mulai Pelajaran" << endl;
+                        cout << "score : " << para_siswa[j].point << endl;
+                    }
+                    if(i == 0){
                         para_siswa[j].bestpoint = para_siswa[j].initial;
                         para_siswa[j].prefpoint = para_siswa[j].point;
                         para_siswa[j].bestroute = para_siswa[j].vechicle;
-                        cout << "score baru: " << para_siswa[j].prefpoint << endl;
-                        cout << "Update Score diterima" << endl << endl;
-                    }else{
-                        cout << "Murid " << para_siswa[j].id << endl;
-                        cout << "score lama: " << para_siswa[j].prefpoint << endl;
-                        cout << "score baru: " << para_siswa[j].point << endl;
-                        cout << "Update Score ditolak" << endl << endl;
                     }
                 }
-            }else{
-                for (int j = 0; j < num_of_siswa; j++){
-                    para_siswa[j].bestpoint = para_siswa[j].initial;
-                    para_siswa[j].prefpoint = para_siswa[j].point;
-                    para_siswa[j].bestroute = para_siswa[j].vechicle;
-                    cout << "Murid " << para_siswa[j].id << endl;
-                    cout << "score : " << para_siswa[j].prefpoint << endl;
+                if ( i < 1 ) {
+                    TempBestStudent();
+                }    
+                if (i > 0){
+                    cout<< "================================================================"<< endl << endl;
+                    cout<<"Iterasi ke = "<< h+1 << endl;
+                    cout << "===============================================================" << endl;
+                    cout << "Hasil Pelajaran ke-" << i << endl << endl;
+                    for (int j = 0; j < num_of_siswa; j++){
+                        if(para_siswa[j].point < para_siswa[j].prefpoint){
+                            cout << "Murid " << para_siswa[j].id << endl;
+                            cout << "score lama: " << para_siswa[j].prefpoint << endl;
+                            para_siswa[j].bestpoint = para_siswa[j].initial;
+                            para_siswa[j].prefpoint = para_siswa[j].point;
+                            para_siswa[j].bestroute = para_siswa[j].vechicle;
+                            cout << "score baru: " << para_siswa[j].prefpoint << endl;
+                            cout << "Update Score diterima" << endl << endl;
+                        }else{
+                            cout << "Murid " << para_siswa[j].id << endl;
+                            cout << "score lama: " << para_siswa[j].prefpoint << endl;
+                            cout << "score baru: " << para_siswa[j].point << endl;
+                            cout << "Update Score ditolak" << endl << endl;
+                        }
+                        cout << "================================================================" << endl;
+                    }
                 }
-            }
-            PrepareNext();
-            BestStudent();
-            if(i == iteration - 1){
-                continue;
-            }
-            for (int j = 0; j < num_of_siswa; j++)
-            {
-                para_siswa[j].Evaluate(para_siswa);
-                para_siswa[j].CleanUp();
+                //else{
+                //     for (int j = 0; j < num_of_siswa; j++){
+                //         para_siswa[j].bestpoint = para_siswa[j].initial;
+                //         para_siswa[j].prefpoint = para_siswa[j].point;
+                //         para_siswa[j].bestroute = para_siswa[j].vechicle;
+                //         cout << "Murid " << para_siswa[j].id << endl;
+                //         cout << "score : " << para_siswa[j].prefpoint << endl;
+                //         cout << "================================================================" << endl;
+                //     }
+                // }
+                cout << "----------------------------------------------------------------" << endl;
+                PrepareNext();
+                BestStudent();
+                if(i == iteration - 1){
+                    continue;
+                }
+                for (int j = 0; j < num_of_siswa; j++)
+                {
+                    para_siswa[j].Evaluate(para_siswa);
+                    para_siswa[j].CleanUp();
+                }
             }
         }
     }
@@ -488,7 +516,7 @@ public:
                 BestStudent = para_siswa[i];
             }
         }
-        cout << endl << "Best Case Student" << endl;
+        cout << "Best Case Student" << endl;
         BestStudent.report();
         cout << endl << endl << "Perhitungan Selesai" << endl;
     }
@@ -503,7 +531,21 @@ public:
             }
         }
         para_siswa[minIndex].status = 0; //BEST
-        cout << endl << "best student : " << minIndex + 1 << endl;
+        // cout << endl << "best student : " << minIndex + 1 << endl;
+        // cout << "score : " << minvalue << endl;
+    }
+
+    void TempBestStudent(){
+        int minIndex = 0;
+        int minvalue = para_siswa[0].prefpoint;
+        for(int i =0;i< num_of_siswa; i++){
+            if(para_siswa[i].prefpoint < minvalue){
+                minIndex = i;
+                minvalue = para_siswa[i].prefpoint;
+            }
+        }
+        
+        cout << endl << "best student sementara : " << minIndex + 1 << endl;
         cout << "score : " << minvalue << endl;
     }
 
