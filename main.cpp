@@ -10,10 +10,13 @@
 
 using namespace std;
 
+// Inisialisasi Fungsi Random
 std::random_device rd;
 std::mt19937 gen(rd());
 
 // Definisikan struktur untuk menyimpan data.
+// Struct Target Data untuk menyimpan data yang dibaca dari csv
+// ini termasuk lokasi spasial dari targed, waktubuka dan tutup serta data jarak dan waktu yang diperlukan untuk mencapainya dari koordinat lain
 struct TargetData {
     int x;
     int y;
@@ -24,6 +27,8 @@ struct TargetData {
     vector<double> data_waktu_tempuh; // Vektor untuk menyimpan data waktu tempuh
 };
 
+// class Kendaraan untuk menyimpan data yang berkaitan dengan kendaraan
+// ini termasuk id dari kendaraan, kapasitas, lama waktu dia beroperasi dan jalur yang telah dia tempuh
 class Kendaraan {
 public:
     int id;
@@ -33,25 +38,23 @@ public:
     vector<int> routing;
     int caps = 0;
 
+    // konstruktor dari kelas kendaraan
     Kendaraan(){
         routing.push_back(0);
     }
-
     Kendaraan(int Id, int kapasitas) : id(Id), max(kapasitas) {
         routing.push_back(0);
     }
-
-    void Update(){
-
-    }
 };
 
+// calss data jarak yang menyimpan kumpulan data Targetdata
+// class ini menghitung waktu jarak dari sat tempat ke tempat yang lain juga waktu yang dibutuhkan dari satu tempat ke tempat yang lain
 class DataJarak {
 public:
     vector<TargetData> Data;
 
+    // konstruktor dari kelas DataJarak
     DataJarak(){}
-
     DataJarak(vector<TargetData> data) : Data(data) {
         AssignDataJarak();
         AssignDataWaktuTempuh();
@@ -74,6 +77,7 @@ public:
         }
     }
 
+    // fungsi untuk menghitung dan menetukan waktu antar target
     void AssignDataWaktuTempuh() {
         // Pastikan setiap target memiliki vektor data_waktu_tempuh dengan ukuran yang tepat
         for (auto& target : Data) {
@@ -89,6 +93,7 @@ public:
             }
         }
     }
+
     // Fungsi untuk menampilkan data jarak antar target
     void PrintDataJarak() {
         for (size_t i = 0; i < Data.size(); ++i) {
@@ -101,6 +106,7 @@ public:
         }
     }
 
+    // fungsi untuk menampilkan data waktu antar target
     void PrintDataWaktuTempuh() {
         cout << "Waktu tempuh antar target (dalam menit):" << endl;
         for (size_t i = 0; i < Data.size(); ++i) {
@@ -114,6 +120,8 @@ public:
     }
 };
 
+// class siswa menyimpan segala hal yang dibutuh kan oleh seorang siswa
+// mulai dari inisialisasi performa awal, menyimpan data data rte yang akan dipakai dan data kendaraan, sampai bagaimana seorang siswa belajar
 class Siswa {
 public:
     int id; 
@@ -134,6 +142,7 @@ public:
         Setup();
     }
 
+    //fungsi untuk mendapatkan performa awal dari sang siswa
     void Setup() {
         // Resize Temp to the size of destination
         vector<double> Temp(destination);
@@ -149,6 +158,16 @@ public:
         initial = Temp;  
     }
 
+    //fungsi untuk menampilkan performa awal dari sang siswa
+    void ShowInitial(){
+        cout << endl << "Siswa " << this->id << endl; 
+        for(auto num : initial){
+            cout << fixed << setprecision(4) << num << "| " ;
+        }
+        cout << endl;
+    }
+
+    //fungsi untuk mendapatkan rute dari performa awal siswa yang diurtkan 
     void GetRoute(){
         vector<double> Temp = initial;
         routes.resize(destination);
@@ -169,11 +188,22 @@ public:
         }
     }
 
+    // fungsi untuk menampilkan route yang telah didapatkan
+    void ShowRoute(){
+        for(auto num : routes){
+            cout << "  " << num << "  |" ;
+        }
+        cout << endl << endl;
+    }
+
+    // fungsi untuk mereset sang siswa setelah iterasi selesai sebelum memasuki iterasi selanjutnya
     void CleanUp(){
         routes.clear();
         vechicle.clear();
     }
 
+    //fungsi untuk mencoba data route yang telah didapatkan 
+    //rute dicoba berdasarkan urutannya, bila kendaraan sudah tak mampu maka kendaraan selanjutnya akan melanjutkannya
     void TryRoute(DataJarak jarak){
         vector<int> temp = routes; 
         int id = 1;
@@ -232,14 +262,10 @@ public:
             }
             id++;
             vechicle.push_back(TempVechicle);
-            // cout << "route : " ;
-            // for(auto route : TempVechicle.routing){
-            //      cout << route << " - ";
-            //  }
-            // cout << "0" << endl;
         }
     }
 
+    //fungsi untuk menghitung nilai dari sang siswa
     void Assess(){
         int tdt = 0;
         for(auto vehicle : vechicle){
@@ -249,6 +275,7 @@ public:
         point = vechicle.size() * 100000 + tdt * 100 + rdt * 0.00005;
     }
 
+    //fungsi untuk menentukan mana evaluasi yang tepat untuk sang siswa berdasarkan statusnya
     void Evaluate(const vector<Siswa>& para_siswa){
         vector<double> temp(initial.size());
         switch (status)
@@ -271,6 +298,8 @@ public:
         initial = temp;
     }
 
+    // fungsi untuk mengevaluasi kinerja dari siswa rata rata 
+    // x = x(t-1) +- ( random * (x(t-1) - (nilai random parasiswa)))
     vector<double> caseBest(const vector<Siswa>& para_siswa){
         vector<double> temp(initial.size());
         vector<int> j = randomData(initial.size(),1,para_siswa.size());
@@ -282,6 +311,8 @@ public:
         return temp;
     }
 
+    // fungsi untuk mengevaluasi kinerja dari siswa baik
+    // x = x(t-1) + ( random * (best - x(t-1))) +( random * (mean - x(t-1)))
     vector<double> caseGood(const vector<Siswa>& para_siswa){
         vector<double> temp(initial.size());
         vector<double> rand = randomDouble(initial.size());
@@ -293,6 +324,8 @@ public:
         return temp;
     }
 
+    // fungsi untuk mengevaluasi kinerja dari siswa rata rata 
+    // x = x(t-1) + ( random * (mean - x(t-1)))
     vector<double> caseAverage(const vector<Siswa>& para_siswa){
         vector<double> temp(initial.size());
         vector<double> rand = randomDouble(initial.size());
@@ -303,6 +336,8 @@ public:
         return temp;
     }
 
+    // fungsi untuk mengevaluasi kinerja dari siswa random 
+    // x = x(t-1) + ( random * (max - min))
     vector<double> caseRandom(const vector<Siswa>& para_siswa){
         vector<double> temp(initial.size());
         vector<double> rand = randomDouble(initial.size());
@@ -314,6 +349,7 @@ public:
         return temp;
     }
 
+    // fungsi yang akan mengenerate dara random natara 0 dan 1
     vector<double> randomDouble(int size){
     vector<double> Temp(size);
     for (int i = 0; i < size; i++) {
@@ -327,6 +363,7 @@ public:
     return Temp;
     }
 
+    // fungsi yang akan menghasilkna data integer radnom berdasarkan min dan max data
     vector<int> randomData(int size, int min, int max){
         vector<int> temp;
         for(int i = 0; i < size; i++){
@@ -337,6 +374,7 @@ public:
         return temp;
     }
 
+    // fungsi untuk mendapatkan nilai minimun dari setiap data awal para siswa
     vector<double> minData(const vector<Siswa>& para_siswa, int size){
         vector<double> temparray;
         for(int i=0; i < size; i++){
@@ -351,6 +389,7 @@ public:
         return temparray;
     }
 
+    //fungsi untuk mendapatkan nilai maximum dari setiap data awal para siswa
     vector<double> maxData(const vector<Siswa>& para_siswa, int size){
         vector<double> temparray;
         for(int i=0; i < size; i++){
@@ -365,6 +404,7 @@ public:
         return temparray;
     }
 
+    // fungsi untuk mendapatkan nilai rata rata dari para siswa
     vector<double> meanData(const vector<Siswa>& para_siswa, int size){
         vector<double> temparray;
         for(int i=0; i < size; i++){
@@ -378,6 +418,7 @@ public:
         return temparray;
     }
 
+    //fungsi untuk mendapatkan nilai nilai awal dari sang siswa terbaik
     vector<double> bestData(const vector<Siswa>& para_siswa){
         vector<double> temparray;
         for(auto student : para_siswa){
@@ -388,6 +429,7 @@ public:
         return temparray;
     }
 
+    // menampilkan hasil pelajaran dari sang siswa
     void report(){
         cout << "----------------------------------------------------------------" << endl 
              << "Murid : " << this->id << endl
@@ -410,6 +452,9 @@ public:
     }
 };
 
+
+// class alghoritma dimana semuanya akan dijalnkan disini
+// class ini berisi kumpulan siswa dan permasalahannya, siswa akan mencoba mandiri dan mengevaluasi diri berdasarkan hasilnya terhadap siswa lain
 class Alghorithm {
 public:
     int num_of_siswa;
@@ -430,6 +475,7 @@ public:
         }
     }
 
+    //fungsi untuk menerima input dari user untuk karakteristik dari alghoritma 
     void Input(){
         cout << "Inputkan Jumlah Siswa : " ;
         cin >> num_of_siswa;
@@ -439,13 +485,20 @@ public:
         cin >>  mapel;
     }
 
+    // fungsi yang akan mengiterasi jalannya alghortima
     void Iterate(){
         for(int h=0; h<iteration ; h++){
             for(int i=0; i<mapel +1 ; i++){
                 // cout<< "================================================================"<< endl << endl;
                 // cout<<"Iterasi ke = "<< i + 1 << endl;
                 for(int j=0; j<num_of_siswa; j++){
+                    para_siswa[j].ShowInitial();
                     para_siswa[j].GetRoute();
+                    if(h == 0 && i ==0){
+                        para_siswa[j].ShowRoute();
+                    }
+                }
+                for(int j=0; j<num_of_siswa; j++){
                     para_siswa[j].TryRoute(Jarak);
                     para_siswa[j].Assess();
                     if ( i < 1) {
@@ -484,16 +537,6 @@ public:
                         cout << "================================================================" << endl;
                     }
                 }
-                //else{
-                //     for (int j = 0; j < num_of_siswa; j++){
-                //         para_siswa[j].bestpoint = para_siswa[j].initial;
-                //         para_siswa[j].prefpoint = para_siswa[j].point;
-                //         para_siswa[j].bestroute = para_siswa[j].vechicle;
-                //         cout << "Murid " << para_siswa[j].id << endl;
-                //         cout << "score : " << para_siswa[j].prefpoint << endl;
-                //         cout << "================================================================" << endl;
-                //     }
-                // }
                 cout << "----------------------------------------------------------------" << endl;
                 PrepareNext();
                 BestStudent();
@@ -509,18 +552,7 @@ public:
         }
     }
 
-    void Summarize(){
-        Siswa BestStudent;
-        for(int i = 0; i < num_of_siswa; i++){
-            if(para_siswa[i].status == 0){
-                BestStudent = para_siswa[i];
-            }
-        }
-        cout << "Best Case Student" << endl;
-        BestStudent.report();
-        cout << endl << endl << "Perhitungan Selesai" << endl;
-    }
-
+    //fungsi untuk menentukan murid terbaik dan yang akan mendapatkan label 0
     void BestStudent(){
         int minIndex = 0;
         int minvalue = para_siswa[0].prefpoint;
@@ -531,10 +563,9 @@ public:
             }
         }
         para_siswa[minIndex].status = 0; //BEST
-        // cout << endl << "best student : " << minIndex + 1 << endl;
-        // cout << "score : " << minvalue << endl;
     }
 
+    // fungsi untuk menentukan murid terbaik sementara
     void TempBestStudent(){
         int minIndex = 0;
         int minvalue = para_siswa[0].prefpoint;
@@ -549,6 +580,7 @@ public:
         cout << "score : " << minvalue << endl;
     }
 
+    //fungsi untuk menyiapkan iterasi selanjutnya dimana setiap murid diberikan label 1, 2 atau 3
     void PrepareNext(){
         for (int i = 0; i < num_of_siswa; i++) {
             uniform_int_distribution<int> dit(1,3);
@@ -557,6 +589,20 @@ public:
         }
     }
 
+    //fungsi terakhir yang akan dipanggil yang akan menyimpulkan hasil dari alghoritma
+    void Summarize(){
+        Siswa BestStudent;
+        for(int i = 0; i < num_of_siswa; i++){
+            if(para_siswa[i].status == 0){
+                BestStudent = para_siswa[i];
+            }
+        }
+        cout << "Best Case Student" << endl;
+        BestStudent.report();
+        cout << endl << endl << "Perhitungan Selesai" << endl;
+    }
+
+    // fungsi untuk memulai alghoritma
     void Start(){
         Input();
         set_siswa();
@@ -565,28 +611,7 @@ public:
     }
 };
 
-vector<double> randomDouble(int size){
-    vector<double> Temp(size);
-    for (int i = 0; i < size; i++) {
-        double minr = 0.0;
-        double maxr = 1.0;
-        std::uniform_real_distribution<double> dis(minr, maxr);
-        double random = dis(gen);
-        Temp[i] = random;  // Store the random number in Temp
-    }
-    return Temp;
-}
-
-vector<int> randomData(int size, int min, int max){
-    vector<int> temp;
-    for(int i = 0; i < size; i++){
-        uniform_int_distribution<int> dit(min,max);
-
-        temp.push_back(dit(gen));
-    }
-    return temp;
-}
-
+// fungsi untuk membaca filecsv yang akan diubah menjadi kumpulan data jarak
 vector<TargetData> readDataFromCSV(const string& filePath) {
     vector<TargetData> data;
     ifstream file(filePath);
@@ -612,7 +637,7 @@ vector<TargetData> readDataFromCSV(const string& filePath) {
     return data;
 }
 
-// Function to print initial data
+// Function to print initial data (Opsional) nampaknya bisa jadi tidak penting
 void printInitialData(const vector<TargetData>& targets) {
     cout << "DATA AWAL" << endl;
     int number = 0;
@@ -627,10 +652,10 @@ void printInitialData(const vector<TargetData>& targets) {
     }
 }
 
+// fungsi utama, dimana semuanya akan dimulai
 int main() {
-    // Pastikan file ini ada di direktori yang sama dengan executable atau berikan path lengkap.
+    // inisialisasi data yang akan digunakan menggunakan fungsi untuk membaca file csv
     int num;
-
     string csv_file = "sample.csv";
     string datakecil = "Data Kecil.csv";
     string datasedang = "Data Sedang.csv";
@@ -642,6 +667,7 @@ int main() {
 
     vector<TargetData> targets;
 
+    //input dari user untk data yang akan digunakan
     cout << "Pilih file yang akan digunakan : " << endl 
          << "1. Data Kecil" << endl 
          << "2. Data Sedang" << endl 
@@ -650,6 +676,7 @@ int main() {
 
     cin >> num;
 
+    //switch menentukan data mana yang akan digunakan
     switch (num)
     {
     case 1:
@@ -669,9 +696,12 @@ int main() {
         targets = csv;
     }
 
+    //inisialisai class DataJarak dengan kumpulan data yang sudah dibaca
+    //inisialisasi alghoritma dengan objek DataJarak yang telah ada
     DataJarak dataJarak(targets);
     Alghorithm sistem(dataJarak);
 
+    //memulai alghoritma
     sistem.Start();
 
     return 0;
