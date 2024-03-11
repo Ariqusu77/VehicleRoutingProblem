@@ -160,9 +160,9 @@ public:
 
     //fungsi untuk menampilkan performa awal dari sang siswa
     void ShowInitial(){
-        cout << endl << "Siswa " << this->id << endl; 
+        cout << endl << "Murid " << this->id << endl; 
         for(auto num : initial){
-            cout << fixed << setprecision(4) << num << "| " ;
+            cout << " " << fixed << setprecision(3) << num << " |" ;
         }
         cout << endl;
     }
@@ -191,15 +191,38 @@ public:
     // fungsi untuk menampilkan route yang telah didapatkan
     void ShowRoute(){
         for(auto num : routes){
-            cout << "  " << num << "  |" ;
+            int width = (num < 10) ? 6 : 5;
+            width = ( num < 100) ? width : 4;
+            cout << setw(width) << num << " |" ;
         }
-        cout << endl << endl;
+        cout << endl;
+    }
+
+    double NormalizeValue(double value, double inMin, double inMax, double outMin, double outMax) {
+        return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);
+    }
+
+    void Normalize(){
+        double max = initial[0];
+        double min = initial[0];
+        for(auto value : initial){
+            if (value > max){
+                max = value;
+            }
+            if (value < min){
+                min = value;
+            }
+        }
+        for(auto i=0; i<initial.size(); i++){
+            initial[i] = NormalizeValue(initial[i], min, max, 0.0, 1.0);
+        }
     }
 
     // fungsi untuk mereset sang siswa setelah iterasi selesai sebelum memasuki iterasi selanjutnya
     void CleanUp(){
         routes.clear();
         vechicle.clear();
+        this->Normalize();
     }
 
     //fungsi untuk mencoba data route yang telah didapatkan 
@@ -431,12 +454,11 @@ public:
 
     // menampilkan hasil pelajaran dari sang siswa
     void report(){
-        cout << "----------------------------------------------------------------" << endl 
-             << "Murid : " << this->id << endl
+        cout << "Murid : " << this->id << endl
              << "Score : " << this->prefpoint << endl << endl;
         for(int i = 0; i < bestroute.size(); i++){
             vector<int> temp = bestroute[i].routing;
-            cout << "======== Kendaraan " << i+1 << "=========" << endl;
+            cout << "=================================== >> Kendaraan " << i+1 << " << =========================================" << endl;
             cout << "Route : ";
             for(int j = 0; j < temp.size() - 1 ; j++){
                 cout << temp[j] << " - ";
@@ -457,9 +479,9 @@ public:
 // class ini berisi kumpulan siswa dan permasalahannya, siswa akan mencoba mandiri dan mengevaluasi diri berdasarkan hasilnya terhadap siswa lain
 class Alghorithm {
 public:
-    int num_of_siswa;
-    int iteration;
-    int mapel;
+    int num_of_siswa = 0 ;
+    int iteration = 0;
+    int mapel = 0;
     int kapasitas = 60;
     vector<Siswa> para_siswa;
     DataJarak Jarak;
@@ -477,49 +499,69 @@ public:
 
     //fungsi untuk menerima input dari user untuk karakteristik dari alghoritma 
     void Input(){
-        cout << "Inputkan Jumlah Siswa : " ;
-        cin >> num_of_siswa;
-        cout << "Inputkan Jumlah Iteration : " ;
-        cin >>  iteration;
-        cout << "Inputkan Jumlah Mata Pelajaran : " ;
-        cin >>  mapel;
+        while (num_of_siswa < 1){
+            cout << "Inputkan Jumlah Siswa : " ;
+            if (!(cin >> num_of_siswa)) {
+                cout << "Invalid input. Tolong masukkan angka." << endl;
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            }
+        }
+        while (iteration < 1){
+            cout << "Inputkan Jumlah Iteration : " ;
+            if (!(cin >> iteration)) {
+            cout << "Invalid input. Tolong masukkan angka." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        }
+        while (mapel < 1){
+            cout << "Inputkan Jumlah Mata Pelajaran : " ;
+            if (!(cin >> mapel)) {
+                cout << "Invalid input. Tolong masukkan angka." << endl;
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            }
+        }
+        
     }
 
     // fungsi yang akan mengiterasi jalannya alghortima
     void Iterate(){
-        for(int h=0; h<iteration ; h++){
-            for(int i=0; i<mapel +1 ; i++){
-                // cout<< "================================================================"<< endl << endl;
-                // cout<<"Iterasi ke = "<< i + 1 << endl;
+        cout << endl;
+        for(int h=0; h<iteration; h++){
+            cout << "===============================================================================================" << endl;
+            cout << "                                 ITERASI KE - " << h+1 << endl;
+            cout << "                                Memulai ITERASI" << endl;
+            cout << "===============================================================================================" << endl;
+            cout << "Performa Awal para Siswa :" << endl;
+            for(int j=0; j<num_of_siswa; j++){
+                para_siswa[j].ShowInitial();
+                para_siswa[j].GetRoute();
+                para_siswa[j].ShowRoute();
+            }
+
+            for(int i=0; i<mapel; i++){
+                cout << "-----------------------------------------------------------------------------------------------" << endl;
+                cout << "                              Mata Pelajaran ke -" << i+1 << endl;
+                cout << "-----------------------------------------------------------------------------------------------" << endl << endl;
+                cout << " ->> Memulai Pelajaran :" << endl;
                 for(int j=0; j<num_of_siswa; j++){
                     para_siswa[j].ShowInitial();
                     para_siswa[j].GetRoute();
-                    if(h == 0 && i ==0){
-                        para_siswa[j].ShowRoute();
-                    }
-                }
-                for(int j=0; j<num_of_siswa; j++){
+                    para_siswa[j].ShowRoute();
                     para_siswa[j].TryRoute(Jarak);
                     para_siswa[j].Assess();
-                    if ( i < 1) {
-                        cout << endl << "Murid " << para_siswa[j].id  << " Mulai Pelajaran" << endl;
-                        cout << "score : " << para_siswa[j].point << endl;
-                    }
-                    if(i == 0){
+                    cout << "score : " << para_siswa[j].point << endl;
+                }
+                cout << endl <<" ->> Hasil Pelajaran :" << endl << endl;
+                for (int j = 0; j < num_of_siswa; j++){
+                    if(i==0 && h==0){
                         para_siswa[j].bestpoint = para_siswa[j].initial;
                         para_siswa[j].prefpoint = para_siswa[j].point;
                         para_siswa[j].bestroute = para_siswa[j].vechicle;
                     }
-                }
-                if ( i < 1 ) {
-                    TempBestStudent();
-                }    
-                if (i > 0){
-                    cout<< "================================================================"<< endl << endl;
-                    cout<<"Iterasi ke = "<< h+1 << endl;
-                    cout << "===============================================================" << endl;
-                    cout << "Hasil Pelajaran ke-" << i << endl << endl;
-                    for (int j = 0; j < num_of_siswa; j++){
+                    else{
                         if(para_siswa[j].point < para_siswa[j].prefpoint){
                             cout << "Murid " << para_siswa[j].id << endl;
                             cout << "score lama: " << para_siswa[j].prefpoint << endl;
@@ -534,13 +576,12 @@ public:
                             cout << "score baru: " << para_siswa[j].point << endl;
                             cout << "Update Score ditolak" << endl << endl;
                         }
-                        cout << "================================================================" << endl;
                     }
                 }
-                cout << "----------------------------------------------------------------" << endl;
+                TempBestStudent();
                 PrepareNext();
                 BestStudent();
-                if(i == iteration - 1){
+                if(h == iteration - 1 && i == mapel-1){
                     continue;
                 }
                 for (int j = 0; j < num_of_siswa; j++)
@@ -576,8 +617,8 @@ public:
             }
         }
         
-        cout << endl << "best student sementara : " << minIndex + 1 << endl;
-        cout << "score : " << minvalue << endl;
+        cout << "Siswa Terbaik sementara : " << minIndex + 1 << endl;
+        cout << "score : " << minvalue << endl << endl;
     }
 
     //fungsi untuk menyiapkan iterasi selanjutnya dimana setiap murid diberikan label 1, 2 atau 3
@@ -597,9 +638,11 @@ public:
                 BestStudent = para_siswa[i];
             }
         }
-        cout << "Best Case Student" << endl;
+        cout << "===============================================================================================" << endl;
+        cout << "                                  BEST CASE STUDENT " << endl;
+        cout << "===============================================================================================" << endl;
         BestStudent.report();
-        cout << endl << endl << "Perhitungan Selesai" << endl;
+        cout << endl << "============================== Perhitungan Selesai ============================================" << endl;
     }
 
     // fungsi untuk memulai alghoritma
@@ -655,7 +698,7 @@ void printInitialData(const vector<TargetData>& targets) {
 // fungsi utama, dimana semuanya akan dimulai
 int main() {
     // inisialisasi data yang akan digunakan menggunakan fungsi untuk membaca file csv
-    int num;
+    int num = 0;
     string csv_file = "sample.csv";
     string datakecil = "Data Kecil.csv";
     string datasedang = "Data Sedang.csv";
@@ -673,8 +716,14 @@ int main() {
          << "2. Data Sedang" << endl 
          << "3. Data Besar" << endl
          << endl;
-
-    cin >> num;
+    while ( (num != 1 && num != 2) && num != 3 ){
+        cout << "Pilih dataset yang mau dipakai : ";
+        if (!(cin >> num)) {
+            cout << "Invalid input. Tolong masukkan angka." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+    }
 
     //switch menentukan data mana yang akan digunakan
     switch (num)
