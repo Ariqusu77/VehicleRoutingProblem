@@ -549,6 +549,13 @@ public:
                     para_siswa[j].prefpoint = para_siswa[j].point;
                     para_siswa[j].bestroute = para_siswa[j].vechicle;
                 }
+                PrepareNext();
+                BestStudent();
+                for (int j = 0; j < num_of_siswa; j++)
+                {
+                    para_siswa[j].Evaluate(para_siswa);
+                    para_siswa[j].CleanUp();
+                }
             }
 
             for(int i=0; i<mapel; i++){
