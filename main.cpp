@@ -541,9 +541,19 @@ public:
                 para_siswa[j].ShowRoute();
             }
 
+            if(h == 0){
+                for(int j=0; j<num_of_siswa; j++){
+                    para_siswa[j].TryRoute(Jarak);
+                    para_siswa[j].Assess();
+                    para_siswa[j].bestpoint = para_siswa[j].initial;
+                    para_siswa[j].prefpoint = para_siswa[j].point;
+                    para_siswa[j].bestroute = para_siswa[j].vechicle;
+                }
+            }
+
             for(int i=0; i<mapel; i++){
                 cout << "-----------------------------------------------------------------------------------------------" << endl;
-                cout << "                              Mata Pelajaran ke -" << i+1 << endl;
+                cout << "                              Mata Pelajaran ke - " << i+1 << endl;
                 cout << "-----------------------------------------------------------------------------------------------" << endl << endl;
                 cout << " ->> Memulai Pelajaran :" << endl;
                 for(int j=0; j<num_of_siswa; j++){
@@ -556,26 +566,19 @@ public:
                 }
                 cout << endl <<" ->> Hasil Pelajaran :" << endl << endl;
                 for (int j = 0; j < num_of_siswa; j++){
-                    if(i==0 && h==0){
+                    if(para_siswa[j].point < para_siswa[j].prefpoint){
+                        cout << "Murid " << para_siswa[j].id << endl;
+                        cout << "score lama: " << para_siswa[j].prefpoint << endl;
                         para_siswa[j].bestpoint = para_siswa[j].initial;
                         para_siswa[j].prefpoint = para_siswa[j].point;
                         para_siswa[j].bestroute = para_siswa[j].vechicle;
-                    }
-                    else{
-                        if(para_siswa[j].point < para_siswa[j].prefpoint){
-                            cout << "Murid " << para_siswa[j].id << endl;
-                            cout << "score lama: " << para_siswa[j].prefpoint << endl;
-                            para_siswa[j].bestpoint = para_siswa[j].initial;
-                            para_siswa[j].prefpoint = para_siswa[j].point;
-                            para_siswa[j].bestroute = para_siswa[j].vechicle;
-                            cout << "score baru: " << para_siswa[j].prefpoint << endl;
-                            cout << "Update Score diterima" << endl << endl;
-                        }else{
-                            cout << "Murid " << para_siswa[j].id << endl;
-                            cout << "score lama: " << para_siswa[j].prefpoint << endl;
-                            cout << "score baru: " << para_siswa[j].point << endl;
-                            cout << "Update Score ditolak" << endl << endl;
-                        }
+                        cout << "score baru: " << para_siswa[j].prefpoint << endl;
+                        cout << "Update Score diterima" << endl << endl;
+                    }else{
+                        cout << "Murid " << para_siswa[j].id << endl;
+                        cout << "score lama: " << para_siswa[j].prefpoint << endl;
+                        cout << "score baru: " << para_siswa[j].point << endl;
+                        cout << "Update Score ditolak" << endl << endl;
                     }
                 }
                 TempBestStudent();
